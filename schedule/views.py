@@ -4,8 +4,13 @@ from .models import Service
 # Create your views here.
 
 def index(request):
-    """Index view for the schedule app"""
-    return render(request, 'schedule/index.html')
+    """Index view for the equipment page, showing all services/equipment"""
+    services = Service.objects.all().order_by('name')
+    context = {
+        'equipment_list': services,
+        'background_image': '/media/services/pexels-nc-farm-bureau-mark-2252618.jpg',
+    }
+    return render(request, 'schedule/index.html', context)
 
 def service_list(request):
     """View to display all available services"""

@@ -1,1 +1,359 @@
-=
+{% extends "base.html" %}
+{% load appointment_extras %}
+{% block content %}
+
+<style>
+  /* Make sure this page uses newpic2.jpg even if base sets a different image */
+  body { background-image: url('/media/newpic2.jpg') !important; }
+
+  /* ===== Background layers ===== */
+  :root { --fade: 0; } /* updated by JS on scroll (0 → 1) */
+
+  .bg-layer, .tint-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1; /* ⬅️ push BEHIND navbar & content */
+  }
+  .bg-layer {
+    background: url('/media/newpic2.jpg') no-repeat center center fixed;
+    background-size: cover;
+  }
+  .tint-layer {
+    background: rgba(7, 18, 33, calc(var(--fade) * 0.65));
+    transition: background 120ms linear;
+  }
+
+  /* Keep content above the background layers */
+  .page-content { position: relative; z-index: 1; }
+
+  /* Ensure your base navbar sits on top and stays readable */
+  .navbar {
+    position: relative;
+    z-index: 3; /* ⬅️ above everything */
+    background: rgba(255,255,255,0.9) !important;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 2px 10px rgba(0,0,0,.12);
+  }
+
+  /* Heading "box" for contrast on top of the image */
+  .schedule-heading {
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    display: inline-block;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+  }
+
+  /* A subtle card glass for readability on busy backgrounds */
+  .card.glass {
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(3px);
+  }
+
+  /* Accent badges and mini labels */
+  .badge-pill {
+    border-radius: 999px;
+    padding: 0.45rem 0.85rem;
+    font-weight: 600;
+    letter-spacing: .2px;
+  }
+
+  /* Section titles */
+  .section-title {
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.55);
+  }
+</style>
+
+<!-- Fixed background layers (now behind everything) -->
+<div class="bg-layer"></div>
+<div class="tint-layer"></div>
+
+<div class="page-content">
+  <div class="container py-4">
+
+    <!-- Top heading box -->
+    <div class="text-center mb-4">
+      <h3 class="schedule-heading">{{ month_name }} {{ year }} Schedule</h3>
+    </div>
+
+    <!-- Controls -->
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+      <form method="get" class="d-flex align-items-center gap-2">
+        <button type="submit" name="month" value="{{ month|add:-1 }}" class="btn btn-outline-light btn-sm"
+                {% if month == 1 %}disabled{% endif %}>&laquo; Prev</button>
+
+        <select name="month" class="form-select form-select-sm w-auto">
+          {% for m in months %}
+            <option value="{{ m }}" {% if m == month %}selected{% endif %}>
+              {{ month_names|index:m|default:m }}
+            </option>
+          {% endfor %}
+        </select>
+
+        <select name="year" class="form-select form-select-sm w-auto">
+          {% for y in year_options %}
+            <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+
+        <button type="submit" class="btn btn-outline-light btn-sm">Go</button>
+        <button type="submit" name="month" value="{{ month|add:1 }}" class="btn btn-outline-light btn-sm"
+                {% if month == 12 %}disabled{% endif %}>Next &raquo;</button>
+      </form>
+
+      <span class="badge badge-pill bg-success text-uppercase">Live Calendar</span>
+    </div>
+
+    <!-- Calendar -->
+    <div class="card glass shadow-sm mb-4">
+      <div class="card-body p-3">
+        <div class="table-responsive">
+          <table class="table table-bordered text-center align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Sun</th>
+                <th>Mon</th>
+                <th>Tue</th>
+                <th>Wed</th>
+                <th>Thu</th>
+                <th>Fri</th>
+                <th>Sat</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for week in weeks %}
+                <tr>
+                  {% for day in week %}
+                    {% if day %}
+                      <td class="py-3">
+                        <div class="fw-bold">{{ day }}</div>
+                        {% with status=calendar_status|dict_get:day %}
+                          {% if status == 'booked' %}
+                            <span class="badge bg-danger">Booked</span>
+                          {% elif status == 'available' %}
+                            <span class="badge bg-success">Available</span>
+                          {% endif %}
+                        {% endwith %}
+                      </td>
+                    {% else %}
+                      <td></td>
+                    {% endif %}
+                  {% endfor %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info rows -->
+    <h4 class="section-title text-center mb-3">Why Rent With Us</h4>
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="card glass shadow-sm h-100">
+          <div class="card-body">
+            <h5 class="card-title mb-2">Same-Day Delivery</h5>
+            <p class="mb-2">Order by noon and get equipment delivered within Sierra Vista city limits (availability permitting).</p>
+            <span class="badge badge-pill bg-primary">Fast</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card glass shadow-sm h-100">
+          <div class="card-body">
+            <h5 class="card-title mb-2">Project-Ready Gear</h5>
+            <p class="mb-2">Inspected, fueled, and ready to work so you can start immediately without delays.</p>
+            <span class="badge badge-pill bg-success">Reliable</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card glass shadow-sm h-100">
+        <div class="card-body">
+            <h5 class="card-title mb-2">Weekend Deals</h5>
+            <p class="mb-2">Pick up Fri after 4pm, return Mon by 9am—only pay for one day on select items.</p>
+            <span class="badge badge-pill bg-warning text-dark">Save More</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing bundles -->
+    <h4 class="section-title text-center mb-3">Popular Bundles</h4>
+    <div class="row g-3 mb-4">
+      <div class="col-lg-4">
+        <div class="card glass shadow-sm h-100">
+          <div class="card-body">
+            <h5 class="card-title">Weekend Warrior</h5>
+            <ul class="mb-3">
+              <li>Plate compactor</li>
+              <li>3kW generator</li>
+              <li>Safety kit</li>
+            </ul>
+            <a href="tel:7602355830" class="btn btn-primary w-100">Call for price</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card glass shadow-sm h-100">
+          <div class="card-body">
+            <h5 class="card-title">Landscaper Pack</h5>
+          <ul class="mb-3">
+              <li>Sod cutter</li>
+              <li>Aerator</li>
+              <li>Trailer add-on</li>
+            </ul>
+            <a href="tel:7602355830" class="btn btn-outline-primary w-100">Get a quote</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card glass shadow-sm h-100">
+          <div class="card-body">
+            <h5 class="card-title">Event Power</h5>
+            <ul class="mb-3">
+              <li>Quiet generator</li>
+              <li>Cable runs</li>
+              <li>Setup support</li>
+            </ul>
+            <a href="tel:7602355830" class="btn btn-outline-dark w-100">Check availability</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <h4 class="section-title text-center mb-3">How It Works</h4>
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="card glass shadow-sm h-100">
+          <div class="card-body">
+            <h6 class="text-uppercase text-muted">Step 1</h6>
+            <h5 class="card-title">Pick Dates & Gear</h5>
+            <p>Use the schedule above or call us for a recommendation.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card glass shadow-sm h-100">
+          <div class="card-body">
+            <h6 class="text-uppercase text-muted">Step 2</h6>
+            <h5 class="card-title">Confirm Delivery</h5>
+            <p>We’ll text ETA and drop-off instructions. Pickup is also available.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card glass shadow-sm h-100">
+          <div class="card-body">
+            <h6 class="text-uppercase text-muted">Step 3</h6>
+            <h5 class="card-title">Get to Work</h5>
+            <p>All equipment is project-ready. Need more time? Just call to extend.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service area + testimonials -->
+    <div class="row g-3 mb-4">
+      <div class="col-lg-6">
+        <div class="card glass shadow-sm h-100">
+          <div class="card-body">
+            <h5 class="card-title">Service Areas</h5>
+            <p class="mb-1">Sierra Vista • Hereford • Huachuca City • Fort Huachuca</p>
+            <small class="text-muted">Same-day service where available.</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card glass shadow-sm h-100">
+          <div class="card-body">
+            <h5 class="card-title">What local crews say</h5>
+            <p class="mb-2">“Booked Friday night and had a compactor on site by 8am. Pricing was straight and equipment ran perfect.”</p>
+            <small class="text-muted d-block mb-2">— Javier R., General Contractor</small>
+            <p class="mb-2">“Customer service helped me size the right generator, and delivery was on time.”</p>
+            <small class="text-muted">— M. Alvarez, Event Planner</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="card glass shadow-sm mb-4">
+      <div class="card-body">
+        <h5 class="card-title">FAQ</h5>
+        <div class="accordion" id="faq">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="q1">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#a1" aria-expanded="false" aria-controls="a1">
+                Do you offer delivery and pickup?
+              </button>
+            </h2>
+            <div id="a1" class="accordion-collapse collapse" aria-labelledby="q1" data-bs-parent="#faq">
+              <div class="accordion-body">
+                Yes—same-day within Sierra Vista (subject to availability). Fees vary by distance and equipment weight.
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="q2">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#a2" aria-expanded="false" aria-controls="a2">
+                What do I need to rent?
+              </button>
+            </h2>
+            <div id="a2" class="accordion-collapse collapse" aria-labelledby="q2" data-bs-parent="#faq">
+              <div class="accordion-body">
+                A valid ID, payment method, and in some cases a refundable deposit. Certain items may require proof of experience.
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="q3">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#a3" aria-expanded="false" aria-controls="a3">
+                Can I extend my rental?
+              </button>
+            </h2>
+            <div id="a3" class="accordion-collapse collapse" aria-labelledby="q3" data-bs-parent="#faq">
+              <div class="accordion-body">
+                Absolutely—call or text <a href="tel:7602355830">760-235-5830</a> before your return time and we’ll update your schedule if available.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="text-center mb-5">
+      <p class="fs-5 text-white mb-2" style="text-shadow: 0 2px 8px rgba(0,0,0,0.6);">Ready to book?</p>
+      <a href="tel:7602355830" class="btn btn-lg btn-primary">Call 760-235-5830</a>
+      <p class="text-white-50 mt-2 mb-0">Ask about code <strong>FALL10</strong> for 10% off weekend rentals.</p>
+    </div>
+
+    <!-- Your original phone line (kept) -->
+    <div class="text-center">
+      <p class="fs-5 text-white">Call <strong>7602355830</strong> to book an appointment.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- Scroll-driven fade -->
+<script>
+  (function () {
+    function updateFade() {
+      var max = 600; // px of scroll after which the tint is fully applied
+      var y = window.scrollY || window.pageYOffset || 0;
+      var p = Math.max(0, Math.min(1, y / max));
+      document.documentElement.style.setProperty('--fade', p.toFixed(3));
+    }
+    updateFade();
+    window.addEventListener('scroll', updateFade, { passive: true });
+  })();
+</script>
+
+{% endblock %}

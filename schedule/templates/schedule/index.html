@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  /* ===== Background + soft tint ===== */
+  body {
+    background: url('/media/newpic1.jpg') center/cover no-repeat fixed !important;
+    min-height: 100vh;
+    margin: 0;
+  }
+  .bg-tint {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(0,0,0,0.00), rgba(0,0,0,0.55)),
+      linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.45));
+  }
+
+  /* ===== Section scaffolding ===== */
+  .page-wrap { position: relative; z-index: 1; padding-top: 2rem; padding-bottom: 3rem; }
+
+  /* ===== Hero “glass” header ===== */
+  .hero {
+    color: #fff;
+    text-align: center;
+    padding: 2.75rem 1.5rem;
+    margin-bottom: 2rem;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 18px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.28);
+  }
+  .hero .logo {
+    max-width: 140px; height: auto; margin-bottom: 1rem;
+    border-radius: 50%;
+    background: #fff;
+    padding: 6px;
+    border: 4px solid rgba(255,255,255,0.85);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+  }
+  .hero h1 {
+    font-weight: 800;
+    letter-spacing: .3px;
+    text-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    margin-bottom: .5rem;
+  }
+  .hero p.lead {
+    font-size: 1.2rem;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.55);
+    margin-bottom: 0;
+  }
+
+  /* ===== Section title ===== */
+  .section-title {
+    color: #fff;
+    text-align: center;
+    font-weight: 800;
+    letter-spacing: .3px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.55);
+    margin-bottom: 1.25rem;
+  }
+  .title-accent {
+    width: 72px; height: 4px; border-radius: 999px;
+    background: linear-gradient(90deg, #60a5fa, #a78bfa, #34d399);
+    margin: 0.25rem auto 1.75rem;
+    box-shadow: 0 6px 16px rgba(96,165,250,0.35);
+  }
+
+  /* ===== Equipment cards ===== */
+  .equipment-grid { row-gap: 1.25rem; }
+  @media (min-width: 768px) { .equipment-grid { row-gap: 1.5rem; } }
+
+  .card.equip {
+    background: rgba(255,255,255,0.97);
+    border: 1px solid rgba(17,24,39,0.08);
+    border-radius: 16px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.18);
+    overflow: hidden;
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+  .card.equip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 36px rgba(0,0,0,0.24);
+  }
+  .equip-img {
+    height: 220px; width: 100%; object-fit: cover;
+  }
+  .card-body h3 {
+    font-weight: 700; letter-spacing: .2px; margin-bottom: .5rem;
+  }
+  .card-body p { color: #374151; }
+
+  /* Price & availability */
+  .price {
+    font-weight: 800; font-size: 1.15rem; color: #0f172a; margin-bottom: .5rem;
+  }
+  .chip {
+    display: inline-block; padding: .5rem 1rem; border-radius: 999px; font-weight: 700;
+    font-size: .95rem; letter-spacing: .2px;
+  }
+  .chip-available {
+    background: linear-gradient(180deg, #38d39f, #14b87e);
+    color: #fff; box-shadow: 0 6px 16px rgba(20,184,126,0.35);
+  }
+  .chip-unavailable {
+    background: linear-gradient(180deg, #94a3b8, #64748b);
+    color: #fff; box-shadow: 0 6px 16px rgba(100,116,139,0.35);
+  }
+</style>
+
+<!-- Soft overlay behind everything -->
+<div class="bg-tint"></div>
+
+<div class="page-wrap">
+  <!-- HERO -->
+  <div class="hero">
+    <img src="/media/IMG_3933 (1).jpeg" alt="Logo" class="logo">
+    <h1 class="display-5">Welcome to Sierra Vista Rentals</h1>
+    <p class="lead">Your trusted partner for rental equipment in Sierra Vista.</p>
+  </div>
+
+  <!-- SECTION TITLE -->
+  <h2 class="section-title">Available Equipment</h2>
+  <div class="title-accent"></div>
+
+  <!-- EQUIPMENT GRID -->
+  <div class="row equipment-grid">
+    {% for equipment in equipment_list %}
+      <div class="col-12 col-md-10 col-lg-8 mx-auto">
+        <div class="card equip">
+          {% if equipment.image %}
+            <img src="{{ equipment.image.url }}" class="equip-img" alt="{{ equipment.name }}">
+          {% endif %}
+          <div class="card-body">
+            <h3 class="card-title">{{ equipment.name }}</h3>
+            <p class="card-text">{{ equipment.description }}</p>
+            <div class="price">${{ equipment.price }}</div>
+
+            {% if equipment.availability == 'available' %}
+              <span class="chip chip-available">{{ equipment.get_availability_display }}</span>
+            {% else %}
+              <span class="chip chip-unavailable">{{ equipment.get_availability_display }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12">
+        <div class="text-center text-white" style="text-shadow: 0 2px 8px rgba(0,0,0,0.6);">
+          <p>No equipment available at the moment.</p>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}
