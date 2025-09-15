@@ -111,20 +111,31 @@ STORAGES = {
     },
 }
 
-# ---------- Default PK ----------
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# ---------- Media on S3 in production ----------
 if os.getenv("AWS_STORAGE_BUCKET_NAME"):
     INSTALLED_APPS += ["storages"]
-    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
+    # Use S3 for DEFAULT storage (do NOT set DEFAULT_FILE_STORAGE directly in Django 4.2+)
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    }
+
     AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "us-east-1")
+    AWS_S3_SIGNATURE_VERSION = "s3v4"
+
     AWS_DEFAULT_ACL = None
     AWS_S3_FILE_OVERWRITE = False
-    AWS_QUERYSTRING_AUTH = False  # set True if you want signed URLs
-    # Optional custom domain (CDN or virtual-hosted-style):
+    AWS_QUERYSTRING_AUTH = False  # set True for signed/private URLs
+
     bucket = os.environ["AWS_STORAGE_BUCKET_NAME"]
-    region = os.getenv("AWS_S3_REGION_NAME", "us-east-1")
-    AWS_S3_CUSTOM_DOMAIN = os.getenv(
-        "AWS_S3_CUSTOM_DOMAIN",
-        f"{bucket}.s3.{region}.amazonaws.com"
-    )
+    region = AWS_S3_REGION_NAME
+    if region == "us-east-1":
+        AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN", f"{bucket}.s3.amazonaws.com")
+    else:
+        AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN", f"{bucket}.s3.{region}.amazonaws.com")
+
+    # Media served from S3
     MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+
+# ---------- Default PK ----------
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
