@@ -4,7 +4,7 @@
 {% load static %}
 <style>
   /* Make sure this page uses newpic2.jpg even if base sets a different image */
-  body { background-image: url('/media/newpic2.jpg') !important; }
+  body { background-image: url('/static/newpic2.jpg') !important; }
 
   /* ===== Background layers ===== */
   :root { --fade: 0; } /* updated by JS on scroll (0 → 1) */
@@ -16,7 +16,7 @@
     z-index: -1; /* ⬅️ push BEHIND navbar & content */
   }
   .bg-layer {
-    background: url('/media/newpic2.jpg') no-repeat center center fixed;
+    background: url('/static/newpic2.jpg') no-repeat center center fixed;
     background-size: cover;
   }
   .tint-layer {
