@@ -1,14 +1,31 @@
 {% extends "base.html" %}
-{% block content %}
 {% load static %}
-<style> 
+{% block content %}
+
+<style>
+  /* Full-page background behind everything (incl. navbar/tabbar) */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
+      url("{% static 'newpic2.jpg' %}") center / cover no-repeat;
+    z-index: 0; /* stay behind page chrome */
+  }
+
+  /* Ensure your nav/tabbar stays above the background (Bootstrap navs already do) */
+  /* If needed, uncomment: */
+  /* .navbar { position: relative; z-index: 2; } */
+
+  /* Wrap page content so it sits above the background */
+  .main-wrap { position: relative; z-index: 1; }
+
   .hero {
     text-align: center;
     padding: 6rem 1rem 5rem;
-    background: linear-gradient(
-      rgba(0, 0, 0, 0.55),
-      rgba(0, 0, 0, 0.55)
-    ), url('/static/newpic2.jpg') center/cover no-repeat;
+    /* Remove per-section bg; global bg now */
+    background: transparent;
     border-radius: 16px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.25);
     color: #fff;
@@ -48,12 +65,14 @@
   }
 </style>
 
-<div class="hero">
-  <img src="/static/IMG_3933 (1).jpeg" alt="Sierra Vista Logo" class="logo">
-  <h1 class="display-4">Welcome to <span class="text-primary">Sierra Vista Rentals</span></h1>
-  <p class="lead">Find your next rental with ease and confidence.</p>
-  <a href="/schedule/" class="btn btn-primary btn-lg">Browse Equipment</a>
-  <a href="/appointment/booked-schedule/" class="btn btn-outline-light btn-lg ms-2">Book Appointment</a>
+<div class="main-wrap">
+  <div class="hero">
+    <img src="{% static 'IMG_3933 (1).jpeg' %}" alt="Sierra Vista Logo" class="logo">
+    <h1 class="display-4">Welcome to <span class="text-primary">Sierra Vista Rentals</span></h1>
+    <p class="lead">Find your next rental with ease and confidence.</p>
+    <a href="/schedule/" class="btn btn-primary btn-lg">Browse Equipment</a>
+    <a href="/appointment/booked-schedule/" class="btn btn-outline-light btn-lg ms-2">Book Appointment</a>
+  </div>
 </div>
 
 {% endblock %}
