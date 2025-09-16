@@ -1,0 +1,2 @@
+/bin/bash: -c: line 1: syntax error near unexpected token `)'
+/bin/bash: -c: line 1: `python -c "import os, django; os.environ.setdefault(DJANGO_SETTINGS_MODULE,SierraVista.settings); django.setup(); from django.core.files.base import ContentFile; from django.core.files.storage import default_storage; p=default_storage.save(healthcheck/test.txt, ContentFile(bhello" "s3)); print(WRITE" OK - - OK - OK)'
