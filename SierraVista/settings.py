@@ -10,10 +10,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ---------- Core security / env ----------
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
-# Keep secret out of source in production
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-insecure-key")
 
-# Hosts / CSRF
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else ["*"]
 CSRF_TRUSTED_ORIGINS = [
     origin.strip() for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if origin.strip()
@@ -64,7 +62,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'SierraVista.wsgi.application'
 
 # ---------- Database ----------
-# Default: SQLite (great for local dev)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -72,7 +69,6 @@ DATABASES = {
     }
 }
 
-# If DATABASE_URL is present (Heroku/Render), use Postgres automatically
 if os.getenv("DATABASE_URL"):
     DATABASES['default'] = dj_database_url.parse(
         os.environ['DATABASE_URL'],
@@ -96,15 +92,13 @@ USE_TZ = True
 
 # ---------- Static / Media ----------
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # where collectstatic puts files (Heroku)
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',   # optional: your local static/ folder
-]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# WhiteNoise: compressed + hashed static files
+# Default storage (local dev)
 STORAGES = {
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
@@ -115,26 +109,27 @@ STORAGES = {
 if os.getenv("AWS_STORAGE_BUCKET_NAME"):
     INSTALLED_APPS += ["storages"]
 
-    # Use S3 for DEFAULT storage (do NOT set DEFAULT_FILE_STORAGE directly in Django 4.2+)
-    STORAGES["default"] = {
-        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-    }
-
+    # Required S3 settings
+    AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
     AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "us-east-1")
     AWS_S3_SIGNATURE_VERSION = "s3v4"
-
     AWS_DEFAULT_ACL = None
     AWS_S3_FILE_OVERWRITE = False
-    AWS_QUERYSTRING_AUTH = False  # set True for signed/private URLs
+    AWS_QUERYSTRING_AUTH = True  # signed URLs for private objects
 
-    bucket = os.environ["AWS_STORAGE_BUCKET_NAME"]
+    # Switch default storage backend to S3
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+    }
+
+    # Build the domain for your bucket
+    bucket = AWS_STORAGE_BUCKET_NAME
     region = AWS_S3_REGION_NAME
     if region == "us-east-1":
         AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN", f"{bucket}.s3.amazonaws.com")
     else:
         AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN", f"{bucket}.s3.{region}.amazonaws.com")
 
-    # Media served from S3
     MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
 
 # ---------- Default PK ----------
